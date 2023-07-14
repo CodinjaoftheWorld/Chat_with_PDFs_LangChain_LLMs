@@ -3,6 +3,8 @@ import pandas as pd
 from dotenv import load_dotenv 
 from PyPDF2 import PdfReader
 from langchain.text_splitter import CharacterTextSplitter
+from langchain.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings
+from langchain.vectorstores import FAISS 
 
 
 def get_pdf_text(pdf_docs):
@@ -22,6 +24,24 @@ def get_text_chunks(text):
     )
     chunks = text_splitter.split_text(text)
     return chunks
+
+def get_vectorstore_openai(text_chunks):
+    embeddings = OpenAIEmbeddings()
+    vectorstore = FAISS.from_text(
+        text = text_chunks,
+        embedding = embeddings
+    )
+    return vectorstore
+
+def get_vectorstore_instruct(text_chunks):
+    embeddings = HuggingFaceInstructEmbeddings(model_name = "hkunlp/instructor-xl")
+    vectorstore = FAISS.from_text(
+        text = text_chunks,
+        embedding = embeddings
+    )
+    return vectorstore
+
+
 
 
 def main():
@@ -44,7 +64,11 @@ def main():
                 # st.write(text_chunks)
 
                 # create vector store
-                
+                vectorstore = get_vectorstore_instruct(text_chunks)
+
+                # create conversation chain
+                conversation = get_conversation_chain(vectorstore)
+
 
 
 
