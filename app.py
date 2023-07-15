@@ -3,11 +3,14 @@ import pandas as pd
 from dotenv import load_dotenv 
 from PyPDF2 import PdfReader
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings
+from langchain.embeddings import OpenAIEmbeddings
+# from langchain.embeddings import HuggingFaceInstructEmbeddings
 from langchain.vectorstores import FAISS 
-from langchain.chains import ConversationalRetrievalChain, RetrievalQA
+from langchain.chains import ConversationalRetrievalChain
 from langchain.chat_models import ChatOpenAI 
 from langchain.memory import ConversationBufferMemory
+from htmlTemplates import css, bot_template, user_template
+
 
 
 
@@ -58,17 +61,39 @@ def get_conversation_chain(vectorstore):
     )
     return conversation_chain
 
+def handle_user_input(user_question):
+    response = st.session_state.conversation({'question': user_question})
+    st.session_state.chat_history = response['chat_history']
+    
+    for i, message in enumerate(st.session_state.chat_history):
+        if i % 2 == 0:
+            st.write(user_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
+        else:
+            st.write(bot_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
+
+
+
 
 def main():
     load_dotenv()
     st.set_page_config(page_title="Chat with PDFs", page_icon=":books:")
     
+    st.write(css, unsafe_allow_html=True)
+
     if "conversation" not in st.session_state:
         st.session_state.conversation = None
 
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = None 
 
     st.header("Chat with PDFs :books:")
-    st.text_input(label='Ask a question about your documents: ')
+    user_question = st.text_input(label='Ask a question about your documents: ')
+    if user_question:
+        handle_user_input(user_question)
+
+
+    # st.write(user_template.replace("{{MSG}}", "hello robot"), unsafe_allow_html=True)
+    # st.write(bot_template.replace("{{MSG}}", "hello human"), unsafe_allow_html=True)
 
     with st.sidebar:
         st.subheader("Your Documents")
