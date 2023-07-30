@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import pandas as pd
 from dotenv import load_dotenv 
@@ -33,8 +34,8 @@ def get_text_chunks(text):
     chunks = text_splitter.split_text(text)
     return chunks
 
-def get_vectorstore_openai(text_chunks):
-    embeddings = OpenAIEmbeddings()
+def get_vectorstore_openai(text_chunks, openai_api_key):
+    embeddings = OpenAIEmbeddings(openai_api_key = openai_api_key)
     vectorstore = FAISS.from_texts(
         texts = text_chunks,
         embedding = embeddings
@@ -78,6 +79,9 @@ def handle_user_input(user_question):
 
 def main():
     load_dotenv()
+    
+    openai_api_key = os.environ.get('OPENAI_API_KEY')
+
     st.set_page_config(page_title="Chat with PDFs", page_icon=":books:")
     
     st.write(css, unsafe_allow_html=True)
@@ -111,7 +115,7 @@ def main():
                 # st.write(text_chunks)
 
                 # create vector store
-                vectorstore = get_vectorstore_openai(text_chunks)
+                vectorstore = get_vectorstore_openai(text_chunks, openai_api_key)
  
 
                 # create conversation chain
